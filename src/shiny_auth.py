@@ -1,8 +1,10 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Protocol
 
 from shiny import Inputs, Outputs, Session, module, reactive, render, ui
 from shiny_api_calls import get_url
+
+DEFAULT_MODULE_ID = "shiny_auth_module"
 
 
 def login_popup():
@@ -15,26 +17,52 @@ def login_popup():
     return
 
 
-@module.ui
-def view():
-    return ui.row(
-        ui.output_ui("read_token"),
-    )
-
-
 @dataclass
 class AuthReactiveValues:
     token: reactive.Value[str] = reactive.Value()
     user: reactive.Value[str] = reactive.Value()
     hide_app: reactive.Value[bool] = reactive.Value(True)
-    login_prompt: reactive.Value[bool] = reactive.Value(True)
-    permissions_required: List[str] = None
+    login_prompt: reactive.Value[bool] = reactive.Value()
+    permissions: List[str] = None
+
+
+class ProtectedView(Protocol):  # may use this to try and provide interface for 
+    name: str = "main_view"
+
+
+class AuthProtocol(Protocol):
+    def get_auth():
+        ...
+
+    def check_auth():
+        ...
+
+
+@module.ui
+def view():
+    return ui.row(
+        ui.navset_hidden(
+            ui.nav_panel(
+                ui.input_text(id="token_hidden", label="t", value=""),
+                ui.HTML(
+                    """
+                    <script type="text/javascript">
+                    var x_auth_token = localStorage.getItem('x-auth-token');
+                    document.getElementById('shiny_auth_module-token_hidden').value = x_auth_token;
+                    </script>
+                    """
+                ),
+                ui.output_ui("read_token"),
+            ),
+        ),
+    )
 
 
 @module.server
 def server(
     input: Inputs, output: Outputs, session: Session, 
-    session_auth: AuthReactiveValues = AuthReactiveValues()
+    session_auth: AuthReactiveValues = AuthReactiveValues(),
+    app_auth: AuthProtocol = None
 ):
     @reactive.effect
     def _():
@@ -47,7 +75,7 @@ def server(
                 </script>
                 """
             ),
-            selector="#manage_token-token_hidden",
+            selector="#shiny_auth_module-token_hidden",
             where="afterEnd",
             immediate=True
         )
@@ -55,85 +83,49 @@ def server(
     
     @render.ui
     async def read_token():
-        # print("read_token() function")
-        ui.insert_ui(
-            ui.navset_hidden(
-                ui.nav_panel(
-                    ui.input_text(id="token_hidden", label="t", value=""),
-                    ui.HTML(
-                        """
-                        <script type="text/javascript">
-                        var x_auth_token = localStorage.getItem('x-auth-token');
-                        console.log("token in js");
-                        console.log(x_auth_token);
-                        document.getElementById('manage_token-token_hidden').value = x_auth_token;
-                        </script>
-                        """
-                    ),
-                ),
-            ),
-            selector="#manage_token-read_token",
-            where="BeforeEnd",
-            immediate=True
-        )
         x_auth_token = input.token_hidden()
-        if not x_auth_token:
+        # If no token, login
+        if x_auth_token in ("", None):
             session_auth.login_prompt.set(True)
             return
-        results = await get_url(
-            url="http://localhost:8000/auth/login-check",
-            headers={"Content-Type": "application/json"},
-            body={"token": x_auth_token, "groups_needed": session_auth.permissions_required},
-            type="json",
-            clone=True,
-            method="POST"
-        )
-        if int(results.status) in (204, 401):
+        
+        # Code to verify validity; if fails, login
+        if x_auth_token != "123456789":
+            ui.notification_show("Session expired. Login again", type="warning")
             session_auth.login_prompt.set(True)
             return
-        if int(results.status) != 200:
-            ui.notification_show(f"Authentication check failed (Auth response code: {results.status})")
-            return
-        if int(results.status) == 403:
-            ui.notification_show(results.status)
-            ui.notification_show(str(results.data))
-            ui.notification_show("Insufficient permissions.")
-            return
-        session_auth.user.set(results.data.get("username"))
-        x_auth_token = results.data["token"]
+        
+        # If both checks pass, set the token again
+        # - This does two things:
+        #   1. Triggers function change changes "hide_app" to False
+        #   2. Sets token again, in case part of the verification is to update/refresh token
         session_auth.token.set(x_auth_token)
+
 
     @reactive.effect
     def _():
+        # Only triggered when login_prompt is set; login_prompt is freeze/unset after launching login popup
         if session_auth.login_prompt.is_set():
-            session_auth.login_prompt.get()
-            login_popup()
-            session_auth.login_prompt.freeze()
+            if session_auth.login_prompt.get() is True:
+                login_popup()
+                session_auth.login_prompt.freeze()
+
 
     @reactive.effect
-    @reactive.event(input.submit_btn)
+    @reactive.event(input.submit_btn, ignore_none=True)
     async def _():
         username = input.username()
         password = input.password()
-        results = await get_url(
-            url="http://localhost:8000/auth/login-auth",
-            headers={"Content-Type": "application/json"},
-            body={"username": username, "password": password, "groups_needed": session_auth.permissions_required},
-            type="json",
-            clone=True,
-            method="POST"
-        )
-        # if int(results.status) != 200:
-        #     ui.notification_show(f"Authentication failed (Auth response code: {results.status})")
-        #     return
-        if int(results.status) == 401: 
-            ui.notification_show(results.data)
-            # if and "Insufficient permissions" in results.data.get("message"):
-            # ui.notification_show(results.data.get("message"))
+        
+        # Code to evaluate credentials here
+        if username != "test" or password != "test":
+            ui.notification_show("Invalud username or password", type="warning")
             return
-        print(results.status)
-        print(results.data)
-        session_auth.user.set(results.data.get("username"))
-        x_auth_token = results.data["token"]
+        
+        # Code to return/assign a token here (i.e., an endpoint that produces JWT)
+        x_auth_token = "123456789"
         session_auth.token.set(x_auth_token)
+        # session_auth.login_prompt.freeze()  # not sure if this is requierd
+
+        # Close login popup
         ui.modal_remove()
