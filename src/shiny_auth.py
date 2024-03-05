@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from typing import List, Protocol
+from typing import List, Protocol, Union
 
+from pydantic import SecretStr
 from shiny import Inputs, Outputs, Session, module, reactive, render, ui
 from shiny_api_calls import get_url
 
@@ -31,10 +32,22 @@ class ProtectedView(Protocol):  # may use this to try and provide interface for
 
 
 class AuthProtocol(Protocol):
-    def get_auth():
+    class AuthFailedException(Exception):
         ...
 
-    def check_auth():
+    class AuthExpiredException(Exception):
+        ...
+
+    class PermissionsException(Exception):
+        ...
+
+    class AuthNotFoundException(Exception):
+        ...
+
+    def get_auth(username: str, password: SecretStr) -> Union[str, None]:
+        ...
+
+    def check_auth(token: str) -> Union[str, None]:
         ...
 
 
@@ -90,6 +103,7 @@ def server(
             return
         
         # Code to verify validity; if fails, login
+        # AuthProtocol.check_auth()
         if x_auth_token != "123456789":
             ui.notification_show("Session expired. Login again", type="warning")
             session_auth.login_prompt.set(True)
@@ -118,6 +132,7 @@ def server(
         password = input.password()
         
         # Code to evaluate credentials here
+        # AuthProtocol.get_auth()
         if username != "test" or password != "test":
             ui.notification_show("Invalud username or password", type="warning")
             return
