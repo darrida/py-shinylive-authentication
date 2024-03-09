@@ -3,14 +3,14 @@ import shinyswatch
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 
 app_ui = ui.page_fluid(
-    auth.view(auth.DEFAULT_MODULE_ID), #"shiny_auth_module"),  # <---- AUTH SETUP HERE
-    ui.output_ui("init_main_view"),
+    auth.view(auth.DEFAULT_MODULE_ID),  # <---- AUTH SETUP HERE
+    ui.output_ui("init_main_view"),  # <---- AUTH SETUP HERE
     shinyswatch.theme.darkly(),
     title="Test Auth Page",
 )
 
 
-def app_view():
+def app_view():  # <---- AUTH SETUP HERE
     return ui.page_sidebar(
         ui.sidebar(
             ui.input_text("search_box", "Search for:"),
@@ -36,7 +36,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     @reactive.effect
     @reactive.event(input.search_btn)
     def _():
-        print("search")
         search = str(input.search_box())
         ui.insert_ui(
             ui.card(
