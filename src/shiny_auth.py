@@ -1,13 +1,80 @@
 from dataclasses import dataclass
-from typing import List, Protocol, Union
+from typing import List, Protocol
 
 from pydantic import SecretStr
 from shiny import Inputs, Outputs, Session, module, reactive, render, ui
-from shiny_api_calls import get_url
 
 DEFAULT_MODULE_ID = "shiny_auth_module"
 
 
+##########################################################################
+##########################################################################
+# Protocol for building custom login/session logic around Shinylive Auth
+##########################################################################
+##########################################################################
+class AuthProtocol(Protocol):
+    permissions: List[str] = None
+
+    def get_auth(self, username: str, password: SecretStr) -> str:
+        """Request Authentication for ShinyLive
+
+        - **Instructions**:
+          - If auth is successful, return a session string (i.e. JWT) to be saved to browser local storage
+          - If auth is invalid, raise `self.ShinyLiveAuthFailed`
+          - If insufficient permissions, raise `self.ShinyLivePermissions`
+
+        Args:
+            username (str): Valid username
+            password (pydantic.SecretStr): Vaide password
+        
+        Returns:
+            str: session string (i.e. JWT)
+              
+        Raises:
+            ShinyLiveAuthFailed: failed to validate credentials
+            ShinyLivePermissions: credentials were validated, but user has insufficient permissions for the page/app
+        """
+        ...
+
+    def check_auth(self, token: str) -> str:
+        """Check Existing Authentication Session for ShinyLive
+        
+        - **Instructions**:
+          - If existing session is still valide, return a session string (i.e. JWT) to be re-saved to browser local storeage
+          - If session is expired, raise `self.ShinyLiveAuthExpired`
+          - If insufficient permissions, raise `self.ShinyLivePermissions`
+          - ***Options:***
+            - **If Session Never Refreshes:** Return the existing token
+            - **If Sessoin Refreshes:** Return a different/refreshed token
+
+        Args:
+            username (str): Valid username
+            password (pydantic.SecretStr): Valid password
+        
+        Returns:
+            str: session string (i.e. JWT)
+        
+        Raises:
+            ShinyLiveAuthExpired: existing session is expired
+            ShinyLivePermissions: session is valid, but user has insufficient permissions for the page/app
+        """
+        ...
+
+    class ShinyLiveAuthFailed(Exception):
+        ...
+
+    class ShinyLiveAuthExpired(Exception):
+        ...
+
+    class ShinyLivePermissions(Exception):
+        ...
+
+
+##########################################################################
+##########################################################################
+# Shinylive Auth UI Related
+##########################################################################
+##########################################################################
 def login_popup():
     m = ui.modal(
         ui.input_text("username", "Username"),
@@ -18,37 +85,8 @@ def login_popup():
     return
 
 
-@dataclass
-class AuthReactiveValues:
-    token: reactive.Value[str] = reactive.Value()
-    user: reactive.Value[str] = reactive.Value()
-    hide_app: reactive.Value[bool] = reactive.Value(True)
-    login_prompt: reactive.Value[bool] = reactive.Value()
-    permissions: List[str] = None
-
-
 class ProtectedView(Protocol):  # may use this to try and provide interface for 
     name: str = "main_view"
-
-
-class AuthProtocol(Protocol):
-    class AuthFailedException(Exception):
-        ...
-
-    class AuthExpiredException(Exception):
-        ...
-
-    class PermissionsException(Exception):
-        ...
-
-    class AuthNotFoundException(Exception):
-        ...
-
-    def get_auth(username: str, password: SecretStr) -> Union[str, None]:
-        ...
-
-    def check_auth(token: str) -> Union[str, None]:
-        ...
 
 
 @module.ui
@@ -71,11 +109,24 @@ def view():
     )
 
 
+##########################################################################
+##########################################################################
+# Shinylive Auth Server Module Related
+##########################################################################
+##########################################################################
+@dataclass
+class AuthReactiveValues:
+    token: reactive.Value[str] = reactive.Value()
+    user: reactive.Value[str] = reactive.Value()
+    hide_app: reactive.Value[bool] = reactive.Value(True)
+    login_prompt: reactive.Value[bool] = reactive.Value()
+
+
 @module.server
 def server(
     input: Inputs, output: Outputs, session: Session, 
-    session_auth: AuthReactiveValues = AuthReactiveValues(),
-    app_auth: AuthProtocol = None
+    session_auth: AuthReactiveValues,
+    app_auth: AuthProtocol
 ):
     @reactive.effect
     def _():
@@ -94,18 +145,24 @@ def server(
         )
         session_auth.hide_app.set(False)
     
+
     @render.ui
     async def read_token():
-        x_auth_token = input.token_hidden()
+        existing_token = input.token_hidden()
         # If no token, login
-        if x_auth_token in ("", None):
+        if existing_token in ("", None):
             session_auth.login_prompt.set(True)
             return
         
-        # Code to verify validity; if fails, login
-        # AuthProtocol.check_auth()
-        if x_auth_token != "123456789":
-            ui.notification_show("Session expired. Login again", type="warning")
+        # Use `AuthProtocol.check_auth` to validate the existing session
+        try:
+            returned_token = app_auth.check_auth(existing_token)
+        except app_auth.ShinyLiveAuthExpired:
+            ui.notification_show("Session expired. Please try again.", type="warning")
+            session_auth.login_prompt.set(True)
+            return
+        except app_auth.ShinyLivePermissions:
+            ui.notification_show("Insufficient permissions. Check with IT and then try again.", type="warning")
             session_auth.login_prompt.set(True)
             return
         
@@ -113,7 +170,7 @@ def server(
         # - This does two things:
         #   1. Triggers function change changes "hide_app" to False
         #   2. Sets token again, in case part of the verification is to update/refresh token
-        session_auth.token.set(x_auth_token)
+        session_auth.token.set(returned_token)
 
 
     @reactive.effect
@@ -129,17 +186,21 @@ def server(
     @reactive.event(input.submit_btn, ignore_none=True)
     async def _():
         username = input.username()
-        password = input.password()
+        password = SecretStr(secret_value=input.password())
         
-        # Code to evaluate credentials here
-        # AuthProtocol.get_auth()
-        if username != "test" or password != "test":
+        # Use `AuthProtocol.get_auth` to validate provided credentials
+        try:
+            token = app_auth.get_auth(username, password)
+        except app_auth.ShinyLiveAuthFailed:
             ui.notification_show("Invalud username or password", type="warning")
             return
-        
+        except app_auth.ShinyLivePermissions:
+            ui.notification_show("Insufficient permissions. Check with IT and then try again.", type="warning")
+            session_auth.login_prompt.set(True)
+            return
+
         # Code to return/assign a token here (i.e., an endpoint that produces JWT)
-        x_auth_token = "123456789"
-        session_auth.token.set(x_auth_token)
+        session_auth.token.set(token)
         # session_auth.login_prompt.freeze()  # not sure if this is requierd
 
         # Close login popup
