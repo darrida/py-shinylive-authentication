@@ -1,11 +1,10 @@
 from pathlib import Path
 
 import uvicorn
+from app_routes import router as auth_router
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
-
-from .routes import router as auth_router
 
 app = FastAPI(
     title='Sample Webserver and Auth Endpoint',
@@ -28,7 +27,4 @@ app.add_middleware(
         allow_headers=["*"],
     )
 
-uvicorn.run(
-        app='src_webserver.main:app',
-        port=8000,
-    )
+uvicorn.run(app=app, port=8000)

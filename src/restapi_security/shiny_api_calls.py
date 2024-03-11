@@ -1,5 +1,5 @@
 import json
-from typing import Any, Literal, Tuple, Union
+from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel
 
@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 class HttpResponse(BaseModel):
     status: Union[str, int]
-    data: Union[bytes, dict, str] = None
+    data: Optional[Union[bytes, dict, str]] = None
 
 
 class PyFetch(BaseModel):
@@ -23,8 +23,11 @@ class PyFetch(BaseModel):
         return f"{self.status}, {self.redirected}, {self.ok}, {self.data}, {self.type}, {self.response}"
 
     @staticmethod
-    async def call(url: str, clone: bool = False, method: str = "GET", headers: dict = None, body: dict = None, type_:str = "json", **kwargs) -> Tuple["PyFetch", bool]:
-        import pyodide
+    async def call(
+        url: str, clone: bool = False, method: str = "GET", headers: dict = None, body: dict = None, 
+        type_:str = "json", **kwargs
+    ) -> "PyFetch":
+        import pyodide  # type: ignore -> shows invalid, since it only works in when deployed as ShinyLive/pyodide/WASM
 
         if body:
             body = json.dumps(body)
@@ -78,7 +81,15 @@ class PyFetch(BaseModel):
     def raise_for_status(self):
         return self.response.raise_for_status()
 
-    
+
+# async def requests_download(url: str, headers: dict, method: Literal["POST", "GET", "PUT"], body: dict, **kwargs):
+#     ...
+
+# async def requests_json(url: str, headers: dict, method: Literal["POST", "GET", "PUT", "DELETE"], body: dict, **kwargs):
+#     return await get_url(url=url, headers=headers, method=method, body=body, **kwargs)
+
+
+# async def requests
 
 
 async def get_url(
@@ -115,19 +126,20 @@ async def get_url(
     else:
         import requests
 
-        print(headers)
-        print(body)
-        headers
+        # print(118, headers)
+        # print(119, body)
 
         resp = requests.request(
             method=method,
             url=url,
             headers=headers,
-            data=body,
+            json=body if type == "json" else None,
+            data=body if type != "json" else None,
             allow_redirects=True
         )
 
-        if resp.status_code not in [200]:
+        print(resp.text)
+        if resp.status_code != 200:
             # type = "string"
             data = None
         else:
@@ -139,5 +151,6 @@ async def get_url(
                 with open("test.csv", "wb") as f:
                     f.write(resp.text)
                 data = "test.csv"
-
+        # print(142, resp.status_code)
+        # print(143, data)
         return HttpResponse(status=resp.status_code, data=data)

@@ -13,7 +13,7 @@ SESSIONS_EXPIRE_MIN = 2
 class SimpleAuth:
     required_permissions: List[str] = None
     
-    def get_auth(self, username: str, password: SecretStr) -> str:
+    async def get_auth(self, username: str, password: SecretStr) -> str:
         user = users.get(username)
         # Does user exist?
         if user is None:
@@ -22,14 +22,14 @@ class SimpleAuth:
         if user.is_valid(password) is False:
             raise self.ShinyLiveAuthFailed
         # Does user have sufficient permissions?
-        if user.sufficient_permissions is False:
+        if user.sufficient_permissions() is False:
             raise self.ShinyLivePermissions
         # Create token
         session_id = Session.create_id()
         sessions[session_id] = Session(username=username, groups=user.groups)
         return session_id
 
-    def check_auth(self, token: str) -> str:
+    async def check_auth(self, token: str) -> str:
         session = sessions.get(token)
         # Does session exist?
         if session is None:
@@ -38,7 +38,7 @@ class SimpleAuth:
         if session.is_valid() is False:
             raise self.ShinyLiveAuthExpired
         # Does user have sufficient permissions?
-        if session.sufficient_permissions is False:
+        if session.sufficient_permissions() is False:
             raise self.ShinyLivePermissions
         # Refresh token
         session.refresh()

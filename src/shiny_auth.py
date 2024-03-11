@@ -15,7 +15,7 @@ DEFAULT_MODULE_ID = "shiny_auth_module"
 class AuthProtocol(Protocol):
     permissions: List[str] = None
 
-    def get_auth(self, username: str, password: SecretStr) -> str:
+    async def get_auth(self, username: str, password: SecretStr) -> str:
         """Request Authentication for ShinyLive
 
         - **Instructions**:
@@ -36,7 +36,7 @@ class AuthProtocol(Protocol):
         """
         ...
 
-    def check_auth(self, token: str) -> str:
+    async def check_auth(self, token: str) -> str:
         """Check Existing Authentication Session for ShinyLive
         
         - **Instructions**:
@@ -148,7 +148,7 @@ def server(
 
     @render.ui
     async def read_token():
-        existing_token = input.token_hidden()
+        existing_token = str(input.token_hidden())
         # If no token, login
         if existing_token in ("", None):
             session_auth.login_prompt.set(True)
@@ -156,7 +156,7 @@ def server(
         
         # Use `AuthProtocol.check_auth` to validate the existing session
         try:
-            returned_token = app_auth.check_auth(existing_token)
+            returned_token = await app_auth.check_auth(existing_token)
         except app_auth.ShinyLiveAuthExpired:
             ui.notification_show("Session expired. Please try again.", type="warning")
             session_auth.login_prompt.set(True)
@@ -187,10 +187,13 @@ def server(
     async def _():
         username = input.username()
         password = SecretStr(secret_value=input.password())
+        if all([username, password]) is False:
+            ui.notification_show("'username' and 'password' fields are both required.", type="warning")
+            return
         
         # Use `AuthProtocol.get_auth` to validate provided credentials
         try:
-            token = app_auth.get_auth(username, password)
+            token = await app_auth.get_auth(username, password)
         except app_auth.ShinyLiveAuthFailed:
             ui.notification_show("Invalud username or password", type="warning")
             return
