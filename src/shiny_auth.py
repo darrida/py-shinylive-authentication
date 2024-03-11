@@ -186,7 +186,7 @@ def server(
     @reactive.event(input.submit_btn, ignore_none=True)
     async def _():
         username = input.username()
-        password = SecretStr(secret_value=input.password())
+        password = SecretStr(value=input.password())
         if all([username, password]) is False:
             ui.notification_show("'username' and 'password' fields are both required.", type="warning")
             return

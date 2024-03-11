@@ -20,7 +20,7 @@ class User(BaseModel):
         return True
     
     def sufficient_permissions(self, required_groups: list = None) -> bool:
-        return _sufficient_permissions(required_groups, self.groups)
+        return _sufficient_permissions(self.username, required_groups, self.groups)
 
 
 class Session(BaseModel):
@@ -44,10 +44,12 @@ class Session(BaseModel):
         print(f"Session update: {self.username} | Action: Refreshed")
 
     def sufficient_permissions(self, required_groups: list = None) -> bool:
-        return _sufficient_permissions(required_groups, self.groups)
+        return _sufficient_permissions(self.username, required_groups, self.groups)
 
 
-def _sufficient_permissions(required_groups: list = None, user_groups: list = None) -> bool:
+def _sufficient_permissions(username: str, required_groups: list = None, user_groups: list = None) -> bool:
     if required_groups is not None and set(required_groups).issubset(user_groups) is False:
+        print(f"User loaded: {username} | Permissions status: INVALID | Action: NOT ALLOWED")
         return False
+    print(f"User loaded: {username} | Permissions status: VALID | Action: ALLOWED")
     return True

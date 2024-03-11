@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List
+from typing import List, Optional
 
 from pydantic import SecretStr
 
@@ -22,7 +22,7 @@ class SimpleAuth:
         if user.is_valid(password) is False:
             raise self.ShinyLiveAuthFailed
         # Does user have sufficient permissions?
-        if user.sufficient_permissions() is False:
+        if user.sufficient_permissions(self.required_permissions) is False:
             raise self.ShinyLivePermissions
         # Create token
         session_id = Session.create_id()

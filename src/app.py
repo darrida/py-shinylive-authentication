@@ -27,7 +27,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     #################################################################################################
     # AUTH SETUP HERE
     session_auth = auth.AuthReactiveValues()
-    auth.server(auth.DEFAULT_MODULE_ID, session_auth, app_auth=SimpleAuth())
+    auth.server(auth.DEFAULT_MODULE_ID, session_auth, app_auth=SimpleAuth(required_permissions=["group1"]))
     
     @render.ui
     def init_main_view():
