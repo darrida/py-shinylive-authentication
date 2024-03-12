@@ -50,8 +50,8 @@ def _sufficient_permissions(required_groups: list = None, user_groups: list = No
     return True
 
 users = {
-    "username": User(username="username", password=SecretStr(secret_value="password"), groups=["app1"]),
-    "username2": User(username="username2", password=SecretStr(secret_value="password2"), groups=["app2"]),
+    "username": User(username="username", password=SecretStr(value="password"), groups=["group1"]),
+    "username2": User(username="username2", password=SecretStr(value="password2"), groups=["app2"]),
 }
 
 

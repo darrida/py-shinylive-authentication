@@ -2,7 +2,7 @@ import uuid
 from typing import List, Optional
 
 from app_security import Session, sessions, users
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from loguru import logger
 from pydantic import BaseModel, SecretStr
 
@@ -19,7 +19,10 @@ class AuthResponse(BaseModel):
 
 
 @router.post("/check", response_model=AuthResponse)
-async def auth_check(check: AuthCheck):
+async def auth_check(request: Request, check: AuthCheck):
+    print(await request.json())
+    print(request.headers)
+    # print(sessions)
     session = sessions.get(check.token)
     if session is None:
         logger.info("Existing session load failed | No session found")

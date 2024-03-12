@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Protocol
+from typing import List, Optional, Protocol
 
 from pydantic import SecretStr
 from shiny import Inputs, Outputs, Session, module, reactive, render, ui
@@ -13,7 +13,7 @@ DEFAULT_MODULE_ID = "shiny_auth_module"
 ##########################################################################
 ##########################################################################
 class AuthProtocol(Protocol):
-    permissions: List[str] = None
+    permissions: Optional[list] = None
 
     async def get_auth(self, username: str, password: SecretStr) -> str:
         """Request Authentication for ShinyLive
