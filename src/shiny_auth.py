@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Optional, Protocol
+from typing import Optional, Protocol
 
 from pydantic import SecretStr
 from shiny import Inputs, Outputs, Session, module, reactive, render, ui
@@ -79,7 +79,8 @@ def login_popup():
     m = ui.modal(
         ui.input_text("username", "Username"),
         ui.input_password("password", "Password"),
-        footer=(ui.input_action_button("submit_btn", "Submit"))
+        footer=(ui.input_action_button("submit_btn", "Submit")),
+        title="Login"
     )
     ui.modal_show(m)
     return
@@ -120,6 +121,7 @@ class AuthReactiveValues:
     user: reactive.Value[str] = reactive.Value()
     hide_app: reactive.Value[bool] = reactive.Value(True)
     login_prompt: reactive.Value[bool] = reactive.Value()
+    logout: reactive.Value[bool] = reactive.Value()
 
 
 @module.server
@@ -144,6 +146,7 @@ def server(
             immediate=True
         )
         session_auth.hide_app.set(False)
+        session_auth.logout.set(False)
     
 
     @render.ui
@@ -168,7 +171,7 @@ def server(
         
         # If both checks pass, set the token again
         # - This does two things:
-        #   1. Triggers function change changes "hide_app" to False
+        #   1. Triggers function that changes "hide_app" to False
         #   2. Sets token again, in case part of the verification is to update/refresh token
         session_auth.token.set(returned_token)
 
@@ -208,3 +211,22 @@ def server(
 
         # Close login popup
         ui.modal_remove()
+
+    @reactive.effect
+    async def _():
+        if session_auth.logout.is_set():
+            if session_auth.logout.get() is True:
+                ui.insert_ui(
+                    ui.HTML(
+                        """
+                        <script type="text/javascript">
+                        localStorage.removeItem('x-auth-token');
+                        </script>
+                        """
+                    ),
+                    selector="#shiny_auth_module-token_hidden",
+                    where="afterEnd",
+                    immediate=True
+                )
+                session_auth.hide_app.set(True)
+                session_auth.login_prompt.set(True)
