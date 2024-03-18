@@ -1,7 +1,9 @@
 import shiny_auth as auth
 import shinyswatch
-from restapi_security.auth import RestAPIAuth as SampleAuth
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
+
+# from restapi_security.auth import RestAPIAuth as SampleAuth
+from simple_security.auth import SimpleAuth as SampleAuth
 
 APP_GROUPS_REQUIRED = ["group1"]
 
