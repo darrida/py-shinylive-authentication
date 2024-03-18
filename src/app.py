@@ -1,9 +1,9 @@
 import shiny_auth as auth
 import shinyswatch
-from restapi_security.auth import RestAPIAuth
+from restapi_security.auth import RestAPIAuth as SampleAuth
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 
-# from simple_security.auth import SimpleAuth
+APP_GROUPS_REQUIRED = ["group1"]
 
 app_ui = ui.page_fluid(
     auth.view(auth.DEFAULT_MODULE_ID),  # <---- AUTH SETUP HERE
@@ -27,7 +27,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     #################################################################################################
     # AUTH SETUP HERE
     session_auth = auth.AuthReactiveValues()
-    auth.server(auth.DEFAULT_MODULE_ID, session_auth, app_auth=RestAPIAuth(groups_needed=["group1"]))
+    auth.server(auth.DEFAULT_MODULE_ID, session_auth, app_auth=SampleAuth(groups_needed=APP_GROUPS_REQUIRED))
     
     @render.ui
     def init_main_view():
