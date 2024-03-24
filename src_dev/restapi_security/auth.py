@@ -10,7 +10,7 @@ from pydantic import SecretStr
 if "pyodide" in sys.modules:
     from pyodide import http
 else:
-    from .pyodide_wrapper import http
+    from pyfetch_mimic import http
 
 
 class GeneralAuthException(Exception):
