@@ -19,7 +19,7 @@ dependencies = [
 tests = [
   'fastapi',
   'loguru',
-  'pyfetch_mimic == 0.0.1',
+  'pyfetch_mimic == 0.0.3',
   'httpx'
 ]
 
