@@ -1,9 +1,3 @@
-import sys
-
-# if "pyodide" in sys.modules:
-#     import micropip
-#     await micropip.install("http://localhost:8000/apps/shinylive_auth-0.0.1-py3-none-any.whl")
-# import mypackage
 import shinylive_auth as auth
 import shinyswatch
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
