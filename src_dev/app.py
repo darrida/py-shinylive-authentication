@@ -1,4 +1,10 @@
-import shiny_auth as auth
+import sys
+
+# if "pyodide" in sys.modules:
+#     import micropip
+#     await micropip.install("http://localhost:8000/apps/shinylive_auth-0.0.1-py3-none-any.whl")
+# import mypackage
+import shinylive_auth as auth
 import shinyswatch
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 
@@ -10,7 +16,7 @@ APP_GROUPS_REQUIRED = ["group1"]
 app_ui = ui.page_fluid(
     auth.view(auth.DEFAULT_MODULE_ID),  # <---- AUTH SETUP HERE
     ui.output_ui("init_main_view"),  # <---- AUTH SETUP HERE
-    shinyswatch.theme.darkly(),
+    shinyswatch.theme.minty(),
     title="Test Auth Page",
 )
 

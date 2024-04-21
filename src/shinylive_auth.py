@@ -198,7 +198,7 @@ def server(
         try:
             token = await app_auth.get_auth(username, password)
         except app_auth.ShinyLiveAuthFailed:
-            ui.notification_show("Invalud username or password", type="warning")
+            ui.notification_show("Invalid username or password", type="warning")
             return
         except app_auth.ShinyLivePermissions:
             ui.notification_show("Insufficient permissions. Check with IT and then try again.", type="warning")
