@@ -17,7 +17,7 @@ dependencies = [
 tests = [
   'fastapi',
   'loguru',
-  'pyfetch_mimic == 0.0.3',
+  'pyfetch_mimic == 2024.04.20',
   'httpx',
   'shinylive',
   'shinyswatch',
