@@ -80,7 +80,8 @@ def login_popup():
         ui.input_text("username", "Username"),
         ui.input_password("password", "Password"),
         footer=(ui.input_action_button("submit_btn", "Submit")),
-        title="Login"
+        title="Login",
+        size='s'
     )
     ui.modal_show(m)
     return

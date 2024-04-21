@@ -1,6 +1,6 @@
 [project]
 name = "shinylive_auth"
-version = "2024.04.21"
+version = "2024.04.22"
 authors = [
   {name="darrida", email="darrida.py@gmail.com"}
 ]
@@ -9,7 +9,6 @@ readme = "README.md"
 
 dependencies = [
   'shiny',
-  'shinyswatch',
   'pydantic < 2.0',
   'python_version <= 3.8',
 ]
@@ -20,7 +19,8 @@ tests = [
   'loguru',
   'pyfetch_mimic == 0.0.3',
   'httpx',
-  'shinylive'
+  'shinylive',
+  'shinyswatch',
 ]
 
 [project.urls]
