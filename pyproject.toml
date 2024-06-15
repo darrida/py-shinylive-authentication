@@ -10,7 +10,6 @@ readme = "README.md"
 dependencies = [
   'shiny',
   'pydantic < 2.0',
-  'python_version <= 3.8',
 ]
 
 [project.optional-dependencies]
