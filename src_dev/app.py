@@ -1,5 +1,5 @@
+# import shinyswatch
 import shinylive_auth as auth
-import shinyswatch
 from shiny import App, Inputs, Outputs, Session, reactive, render, ui
 
 # from restapi_security.auth import RestAPIAuth as SampleAuth
@@ -8,9 +8,9 @@ from simple_security.auth import SimpleAuth as SampleAuth
 APP_GROUPS_REQUIRED = ["group1"]
 
 app_ui = ui.page_fluid(
-    auth.view(auth.DEFAULT_MODULE_ID),  # <---- AUTH SETUP HERE
-    ui.output_ui("init_main_view"),  # <---- AUTH SETUP HERE
-    shinyswatch.theme.minty(),
+    auth.view(auth.DEFAULT_AUTH_MODULE_ID),  # <---- AUTH SETUP HERE (creates a logout button here)
+    ui.output_ui("init_main_view"),
+    # shinyswatch.theme.minty(),
     title="Test Auth Page",
 )
 
@@ -29,7 +29,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     #################################################################################################
     # AUTH SETUP HERE
     session_auth = auth.AuthReactiveValues()
-    auth.server(auth.DEFAULT_MODULE_ID, session_auth, app_auth=SampleAuth(groups_needed=APP_GROUPS_REQUIRED))
+    auth.server(auth.DEFAULT_AUTH_MODULE_ID, session_auth, app_auth=SampleAuth(groups_needed=APP_GROUPS_REQUIRED))
     
     @render.ui
     def init_main_view():

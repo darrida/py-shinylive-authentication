@@ -4,7 +4,7 @@ from typing import Optional, Protocol
 from pydantic import SecretStr
 from shiny import Inputs, Outputs, Session, module, reactive, render, ui
 
-DEFAULT_MODULE_ID = "shiny_auth_module"
+DEFAULT_AUTH_MODULE_ID = "shiny_auth_module"
 
 
 ##########################################################################
@@ -108,6 +108,7 @@ def view():
                 ui.output_ui("read_token"),
             ),
         ),
+        ui.input_action_button("logout_btn", "Logout")
     )
 
 
@@ -131,6 +132,11 @@ def server(
     session_auth: AuthReactiveValues,
     app_auth: AuthProtocol
 ):
+    @reactive.effect
+    @reactive.event(input.logout_btn)
+    def _():
+        session_auth.logout.set(True)
+
     @reactive.effect
     def _():
         token = session_auth.token.get()
