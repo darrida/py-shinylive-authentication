@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: lts/*
-    - name: Install dependencies
-      run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+    # - uses: actions/setup-node@v4
+    #   with:
+    #     node-version: lts/*
+    # - name: Install dependencies
+    #   run: npm ci
+    # - name: Install Playwright Browsers
+    #   run: npx playwright install --with-deps
 
     - name: Setup Python
       uses: actions/setup-python@v4
@@ -24,7 +24,9 @@ jobs:
         python-version: '3.x'
     - run: |
         python -m pip install --upgrade pip 
-        pip install pytest pytest-asyncio fastapi httpx uvicorn
+        python -m pip install -e '.[test]'
+    - name: Ensure browsers are installed
+      run: python -m playwright install --with-deps
     - name: Install package
       run: |
         python -m pip install -e .
