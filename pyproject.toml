@@ -24,6 +24,7 @@ tests = [
   'playwright',
   'pytest-playwright',
   'pytest-xdist',
+  'pytest-rerunfailures',
 ]
 
 [project.urls]
