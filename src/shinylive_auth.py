@@ -168,7 +168,7 @@ def server(
         try:
             returned_token = await app_auth.check_auth(existing_token)
         except app_auth.ShinyLiveAuthExpired:
-            ui.notification_show("Session expired. Please try again.", type="warning")
+            ui.notification_show("Session expired. Please try again.", type="warning", id="notify-session-expired")
             session_auth.login_prompt.set(True)
             return
         except app_auth.ShinyLivePermissions:
@@ -198,7 +198,7 @@ def server(
         username = input.username()
         password = SecretStr(value=input.password())
         if all([username, password]) is False:
-            ui.notification_show("'username' and 'password' fields are both required.", type="warning")
+            ui.notification_show("'username' and 'password' fields are both required.", type="warning", id="notify-login-warning")
             return
         
         # Use `AuthProtocol.get_auth` to validate provided credentials
@@ -236,4 +236,5 @@ def server(
                     immediate=True
                 )
                 session_auth.hide_app.set(True)
+                session_auth.token.freeze()
                 session_auth.login_prompt.set(True)

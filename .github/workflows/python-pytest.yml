@@ -1,0 +1,45 @@
+name: Run PyTest
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - run: |
+        python -m pip install --upgrade pip 
+        pip install pytest pytest-asyncio fastapi httpx uvicorn
+    - name: Install package
+      run: |
+        python -m pip install -e .
+    - name: Test with webkit
+      run: |
+        pytest tests --numprocesses auto --browser webkit
+    - name: Test with firefox
+      run: |
+        pytest tests --numprocesses auto--browser firefox
+    - name: Test with chromium
+      run: |
+        pytest tests --numprocesses auto --browser chromium
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: playwright-report/
+        retention-days: 30

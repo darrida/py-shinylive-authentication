@@ -20,6 +20,8 @@ tests = [
   'httpx',
   'shinylive',
   'shinyswatch',
+  'playwright',
+  'pytest-playwright'
 ]
 
 [project.urls]
