@@ -20,6 +20,7 @@ tests = [
   'httpx',
   'shinylive',
   'shinyswatch',
+  'playwrite'
 ]
 
 [project.urls]
