@@ -19,7 +19,7 @@ jobs:
         - name: Install package and testing libraries
           run: |
             python -m pip install --upgrade pip 
-            python -m pip install -e '.[test]'
+            python -m pip install -e '.[tests]'
         - name: Ensure browsers are installed
           run: |
             python -m pip install playwright
