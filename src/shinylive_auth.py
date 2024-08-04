@@ -236,4 +236,5 @@ def server(
                     immediate=True
                 )
                 session_auth.hide_app.set(True)
+                session_auth.token.freeze()
                 session_auth.login_prompt.set(True)
