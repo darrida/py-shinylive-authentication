@@ -22,7 +22,8 @@ tests = [
   'shinylive',
   'shinyswatch',
   'playwright',
-  'pytest-playwright'
+  'pytest-playwright',
+  'pytest-xdist',
 ]
 
 [project.urls]
