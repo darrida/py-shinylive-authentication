@@ -1,11 +1,8 @@
 from dataclasses import dataclass
-from re import search
 
 from playwright.sync_api import Page
 from shiny.playwright import controller
-from shiny.pytest import create_app_fixture
 
-app = create_app_fixture("../app.py")
 
 @dataclass
 class LoginPage:
@@ -23,15 +20,6 @@ class LoginPage:
         self.search_btn = controller.InputActionButton(page, "search_btn")
         self.logout_btn = controller.InputActionButton(page, "shiny_auth_module-logout_btn")
         self.storage_d: dict = None
-
-# # class LoginPage:
-#     def __init__(self, page: Page):
-#         self.username_input = controller.InputText(page, "shiny_auth_module-username")
-#         self.password_input = controller.InputPassword(page, "shiny_auth_module-password")
-#         self.login_btn = controller.InputActionButton(page, "shiny_auth_module-submit_btn")
-#         self.search_btn = controller.InputActionButton(page, "search_btn")
-#         self.logout_btn = controller.InputActionButton(page, "shiny_auth_module-logout_btn")
-#         self.storage_d: dict = None
 
     def setup_login(self):
         self.username_input.set("username")

@@ -111,7 +111,7 @@ def test_logout_success(page: Page, app: ShinyAppProc, context):
     page.reload()
     s.check_logout()
 
-def test_logout_still_refresh(page: Page, app: ShinyAppProc):
+def test_logout_still_refresh(page: Page, app: ShinyAppProc, context):
     page.goto(app.url)
     s = LoginPage()
     s.init(page)
