@@ -18,6 +18,7 @@ tests = [
   'loguru',
   'pyfetch_mimic == 2024.04.20',
   'httpx',
+  'pytest',
   'shinylive',
   'shinyswatch',
   'playwright',
