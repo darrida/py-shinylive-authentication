@@ -22,25 +22,28 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-    - run: |
+    - name: Install package and testing libraries
+      run: |
+        python -m venv venv
+        source venv/bin/activate
         python -m pip install --upgrade pip 
         python -m pip install -e '.[test]'
     - name: Ensure browsers are installed
       run: |
+        source venv/bin/activate
         python -m pip install playwright
         python -m playwright install --with-deps
-    - name: Install package
-      run: |
-        python -m pip install -e '.[test]'
     - name: Test with webkit
       run: |
-        
+        source venv/bin/activate
         pytest tests --numprocesses auto --browser webkit
     - name: Test with firefox
       run: |
+        source venv/bin/activate
         pytest tests --numprocesses auto--browser firefox
     - name: Test with chromium
       run: |
+        source venv/bin/activate
         pytest tests --numprocesses auto --browser chromium
     # - uses: actions/upload-artifact@v4
     #   if: always()
