@@ -4,6 +4,10 @@ shinyapps/
 package-lock.json
 package.json
 playwright.config.ts
+pyodide/
+pyodide-*
+staging/*
+!staging/dependencies
 
 .vscode/
 

@@ -1,6 +1,6 @@
 [project]
 name = "shinylive_auth"
-version = "2024.7.18"
+version = "2024.8.4"
 authors = [
   {name="darrida", email="darrida.py@gmail.com"}
 ]
@@ -25,6 +25,8 @@ tests = [
   'pytest-playwright',
   'pytest-xdist',
   'pytest-rerunfailures',
+  'pytest-pyodide', 
+  'pytest-httpserver',
 ]
 
 [project.urls]

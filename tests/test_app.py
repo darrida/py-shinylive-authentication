@@ -1,12 +1,14 @@
 import pytest
 from model import LoginPage
 from playwright.sync_api import Page, expect
+
+# from pytest_pyodide import run_in_pyodide
 from shiny.pytest import create_app_fixture
 from shiny.run import ShinyAppProc
 
 app = create_app_fixture("../src_dev/app.py")
 
-
+# @run_in_pyodide()
 def test_login_missing_all_inputs(page: Page, app: ShinyAppProc):
     page.goto(app.url)
     s = LoginPage()

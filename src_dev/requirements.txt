@@ -1,2 +1,2 @@
-shinylive-auth==2024.4.22
+shinylive-auth==2024.7.18
 # http://localhost:8000/apps/libs/shinylive_auth-2024.4.21-py3-none-any.whl
